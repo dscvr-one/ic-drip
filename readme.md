@@ -22,4 +22,4 @@ any way you want.
     npm run dfx:setup
     ```
 
-2. [http://rrkah-fqaaa-aaaaa-aaaaq-cai.localhost:8000/?tokenId=100](http://rrkah-fqaaa-aaaaa-aaaaq-cai.localhost:8000/?tokenId=100)
+2. [http://rrkah-fqaaa-aaaaa-aaaaq-cai.localhost:8000/?tokenId=1](http://rrkah-fqaaa-aaaaa-aaaaq-cai.localhost:8000/?tokenId=1)
