@@ -1,4 +1,4 @@
-# IC LOOT
+# IC DRIP
 
 An [Internet Computer](https://internetcomputer.org/) version of [Loot Project](https://www.lootproject.com/)
 
