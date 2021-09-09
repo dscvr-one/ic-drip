@@ -23,7 +23,7 @@
         src="https://d3ttm-qaaaa-aaaai-qam4a-cai.raw.ic0.app/?tokenId=3"
       />
     </div>
-    <div class="text-5xl text-white mb-10 font-bold text-center">Coming Soon...</div>
+   
     <div class="text-xl text-white mb-10 text-center">
       an open source
       <a target="_blank" href="https://internetcomputer.org/" class="underline"
