@@ -84,7 +84,7 @@ impl AddressBook {
 
     pub fn claim(&mut self, user_id: Principal) -> Result<u64, String> {
 
-        if self.claim_index > self.total_supply {
+        if self.claim_index >= self.total_supply {
             return Err("No more claims left".to_string());
         }
 
