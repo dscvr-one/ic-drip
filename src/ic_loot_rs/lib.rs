@@ -7,10 +7,11 @@ use std::collections::BTreeMap;
 mod loot;
 mod rand;
 mod address;
+mod loot2;
 
 use crate::address::AddressBook;
 use crate::loot::Loot;
-
+use crate::loot2::{Loot2, LootData};
 
 #[init]
 fn init() {
@@ -446,6 +447,22 @@ fn init_loot() -> () {
         "Monogramed",
         "Haute Couture",
     ].iter().map(|s| s.to_string()).collect();
+
+
+    let loot2 = storage::get_mut::<Loot2>();
+    *loot2 = Loot2 {
+        weapons: loot.weapons.clone(),
+        waist: loot.waist.clone(),
+        chest: loot.chest.clone(),
+        head: loot.head.clone(),
+        foot: loot.foot.clone(),
+        underwear: loot.underwear.clone(),
+        accessory: loot.accessory.clone(),
+        pants: loot.pants.clone(),
+        prefixes: loot.prefixes.clone(),
+        name_prefixes: loot.name_prefixes.clone(),
+        name_suffixes: loot.name_suffixes.clone(),
+    }
 }
 
 #[query]
@@ -475,8 +492,8 @@ fn transfer_to(user: Principal, token_id: u64) -> bool {
 
 #[update]
 fn claim() -> Result<u64, String> {
-    return Err("No claims for this NFT type (IC DRIP)".to_string());
-    //return storage::get_mut::<AddressBook>().claim(ic_cdk::caller());
+    //return Err("No claims for this NFT type (IC DRIP)".to_string());
+    return storage::get_mut::<AddressBook>().claim(ic_cdk::caller());
 }
 
 //Allow the original airdrop to always exists for future references
@@ -536,6 +553,11 @@ fn remove_controller(user: Principal) -> bool {
 #[update(guard = "is_controller")]
 fn get_controllers() -> Vec<Principal> {
     return storage::get::<AddressBook>().controllers.clone();
+}
+
+#[update]
+fn get_cycles() -> i64 {
+    return ic_cdk::api::call::msg_cycles_available();
 }
 
 #[query]
@@ -608,15 +630,81 @@ async fn http_request(req: HttpRequest) -> HttpResponse {
 }
 
 #[query]
-fn get_token_properties(token_id: u64) -> Vec<(String, String)> {
+fn data_of(token_id: u64) -> Vec<LootData> {
 
-    let address_book = storage::get_mut::<AddressBook>();
+    let address_book = storage::get::<AddressBook>();
     if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id) {
         return Vec::new();
     }
+    let seed = address_book.token_seeds.get(&token_id).unwrap();
+    let loot = storage::get::<Loot2>();
+    return loot.get_properties(token_id + seed);
+}
 
-    let loot = storage::get_mut::<Loot>();
-    return loot.get_properties(token_id);
+#[derive(Clone, Debug, CandidType, Deserialize)]
+pub enum DataOfQuery {
+    Range(u64, u64),
+    List(Vec<u64>)
+}
+
+#[query]
+fn data_of_many(query: DataOfQuery) -> BTreeMap<u64, Vec<LootData>> {
+    let address_book = storage::get::<AddressBook>();
+    match query {
+        DataOfQuery::Range(from, to) => {
+            let mut results = BTreeMap::new();
+            for i in from..to+1 {
+                if !address_book.is_claimed(&i) {
+                    continue;
+                }
+                let seed = address_book.token_seeds.get(&i).unwrap();
+                let loot = storage::get::<Loot2>();
+                results.insert(i, loot.get_properties(i + seed));
+            }
+            return results;
+        },
+        DataOfQuery::List(items) => {
+            let mut results = BTreeMap::new();
+            for id in items {
+                if !address_book.is_claimed(&id) {
+                    continue;
+                }
+                let seed = address_book.token_seeds.get(&id).unwrap();
+                let loot = storage::get::<Loot2>();
+                results.insert(id, loot.get_properties(id + seed));
+            }
+            return results;
+        },
+    }
+}
+
+#[query]
+fn get_token_properties(token_id: u64) -> Vec<(String, String)> {
+
+    let address_book = storage::get::<AddressBook>();
+    if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id) {
+        return Vec::new();
+    }
+    let seed = address_book.token_seeds.get(&token_id).unwrap();
+    let loot = storage::get::<Loot>();
+    return loot.get_properties(token_id + seed);
+}
+
+#[query]
+fn get_token_properties_range(from: u64, to:u64) -> Vec<Vec<(String, String)>> {
+
+    let address_book = storage::get::<AddressBook>();
+    
+    let mut results = Vec::new();
+    for i in from..to+1 {
+        if !address_book.is_claimed(&i) {
+            continue;
+        }
+        let seed = address_book.token_seeds.get(&i).unwrap();
+        let loot = storage::get::<Loot>();
+        results.push(loot.get_properties(i + seed))
+    }
+    return results;
 }
 
 
@@ -624,6 +712,20 @@ fn get_token_properties(token_id: u64) -> Vec<(String, String)> {
 #[query(name = "__get_candid_interface_tmp_hack")]
 fn export_candid() -> String {
     return r#"
+
+//    http://icdrip.io
+
+//    ██▓ ▄████▄     ▓█████▄  ██▀███   ██▓ ██▓███  
+//    ▓██▒▒██▀ ▀█     ▒██▀ ██▌▓██ ▒ ██▒▓██▒▓██░  ██▒
+//    ▒██▒▒▓█    ▄    ░██   █▌▓██ ░▄█ ▒▒██▒▓██░ ██▓▒
+//    ░██░▒▓▓▄ ▄██▒   ░▓█▄   ▌▒██▀▀█▄  ░██░▒██▄█▓▒ ▒
+//    ░██░▒ ▓███▀ ░   ░▒████▓ ░██▓ ▒██▒░██░▒██▒ ░  ░
+//    ░▓  ░ ░▒ ▒  ░    ▒▒▓  ▒ ░ ▒▓ ░▒▓░░▓  ▒▓▒░ ░  ░
+//     ▒ ░  ░  ▒       ░ ▒  ▒   ░▒ ░ ▒░ ▒ ░░▒ ░     
+//     ▒ ░░            ░ ░  ░   ░░   ░  ▒ ░░░       
+//     ░  ░ ░            ░       ░      ░           
+//        ░            ░                            
+ 
 type HeaderField = record { text; text; };
 
 type HttpRequest = record {
@@ -652,12 +754,33 @@ type ClaimResult = variant {
     Err: text;
 };
 
+type LootData = record {
+    slot: text;
+    name: text;
+
+    prefix: text;
+    name_prefix: text;
+    name_suffix: text;
+    special: bool;
+};
+
+type DataOfQuery = variant {
+    Range: record {nat64; nat64};
+    List: vec nat64;
+};
+  
 service : {
     http_request: (request: HttpRequest) -> (HttpResponse) query;
 
     get_address_book: () -> (AddressBook) query;
-    get_token_properties: (nat64) -> (vec record { text; text}) query;
 
+    get_token_properties: (nat64) -> (vec record { text; text}) query;
+    get_token_properties_range: (nat64, nat64) -> (vec vec record { text; text}) query;
+
+    data_of: (nat64) -> (vec LootData) query;
+    data_of_many: (DataOfQuery) -> (vec record {nat64; vec LootData;}) query;
+
+    get_cycles: () -> (int64);
     get_airdrops: () -> (vec record { nat64; bool }) query;
     add_airdrops: (vec principal) -> (bool);
     name: () -> (text) query;

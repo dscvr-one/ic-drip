@@ -12,15 +12,15 @@
     <div class="md:flex grid justify-center mb-10">
       <img
         class="w-96 md:px-6 mb-5"
-        src="https://d3ttm-qaaaa-aaaai-qam4a-cai.raw.ic0.app/?tokenId=1"
+        src="https://d3ttm-qaaaa-aaaai-qam4a-cai.raw.ic0.app/?tokenId=95"
       />
       <img
         class="w-96 md:px-6 mb-5"
-        src="https://d3ttm-qaaaa-aaaai-qam4a-cai.raw.ic0.app/?tokenId=2"
+        src="https://d3ttm-qaaaa-aaaai-qam4a-cai.raw.ic0.app/?tokenId=294"
       />
       <img
         class="w-96 md:px-6"
-        src="https://d3ttm-qaaaa-aaaai-qam4a-cai.raw.ic0.app/?tokenId=3"
+        src="https://d3ttm-qaaaa-aaaai-qam4a-cai.raw.ic0.app/?tokenId=811"
       />
     </div>
    
@@ -29,7 +29,7 @@
       <a target="_blank" href="https://internetcomputer.org/" class="underline"
         >Internet Computer</a
       >
-      project based on the
+      project inspired by
       <a target="_blank" href="https://www.lootproject.com/" class="underline"
         >Loot Project</a
       >

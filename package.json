@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "dfx:install": "dfx canister --network=ic ic_loot_rs --all --mode reinstall",
+    "dfx:install": "dfx canister install ic_loot_rs --all --mode upgrade",
     "dfx:rebuild": "dfx build && npm run dfx:install",
     "dfx:setup": "dfx canister create --all && dfx build && npm run dfx:install"
   },
