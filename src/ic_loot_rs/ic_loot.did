@@ -55,7 +55,12 @@ type DataOfQuery = variant {
   List: vec nat64;
 };
 
-
+type TransferNotification = record {
+  to: principal;
+  from: principal;
+  amount: nat64;
+  memo: opt blob;
+};
 
 service : {
     http_request: (request: HttpRequest) -> (HttpResponse) query;
@@ -75,6 +80,7 @@ service : {
     user_tokens: (principal) -> (vec nat64) query;
     owner_of: (nat64) -> (opt principal) query;
     transfer_to: (principal, nat64) -> (bool);
+    transfer_with_notify: (principal, nat64, TransferNotification) -> (bool);
     claim: () -> (ClaimResult);
     remaining: () -> (nat64);
     supply: () -> (nat64);

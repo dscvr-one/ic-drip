@@ -1,17 +1,30 @@
-use ic_cdk::export::{candid::{CandidType, Deserialize}, Principal};
+use ic_cdk::api::call::CallResult;
+use ic_cdk::export::{
+    candid::{CandidType, Deserialize},
+    Principal,
+};
 use ic_cdk::storage;
 use ic_cdk_macros::*;
-use serde_bytes::{ByteBuf};
+use serde_bytes::ByteBuf;
 use std::collections::BTreeMap;
 
-mod loot;
-mod rand;
 mod address;
+mod loot;
 mod loot2;
+mod rand;
 
 use crate::address::AddressBook;
 use crate::loot::Loot;
 use crate::loot2::{Loot2, LootData};
+
+#[derive(Clone, Debug, CandidType, Deserialize)]
+pub struct TransferNotification {
+    pub to: Principal,
+    pub token: u64,
+    pub from: Principal,
+    pub amount: u64,
+    pub memo: Option<Vec<u8>>,
+}
 
 #[init]
 fn init() {
@@ -21,16 +34,15 @@ fn init() {
     address_book.total_supply = 8000;
 
     //needs to be a way to pass this into init
-    let owner_id = Principal::from_text(
-        "2c22g-lboam-nseoa-i5al6-o7k6f-o2fwz-huoua-be63r-oi3k2-wy7uq-zae"
-    ).unwrap();
+    let owner_id =
+        Principal::from_text("2c22g-lboam-nseoa-i5al6-o7k6f-o2fwz-huoua-be63r-oi3k2-wy7uq-zae")
+            .unwrap();
     address_book.add_controller(&owner_id);
 
     init_loot();
 }
 
 fn init_loot() -> () {
-
     let loot = storage::get_mut::<Loot>();
 
     loot.weapons = vec![
@@ -71,7 +83,10 @@ fn init_loot() -> () {
         "Book",
         "Pocket Watch",
         "Wrench",
-    ].iter().map(|s| s.to_string()).collect();
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     loot.chest = vec![
         "Robe",
@@ -118,7 +133,10 @@ fn init_loot() -> () {
         "Trench Coat",
         "Cape",
         "Kimono",
-    ].iter().map(|s| s.to_string()).collect();
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     loot.head = vec![
         "Fedora",
@@ -173,7 +191,10 @@ fn init_loot() -> () {
         "Bonnet",
         "Fez",
         "Space Helmet",
-    ].iter().map(|s| s.to_string()).collect();
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     loot.waist = vec![
         "Fanny Pack",
@@ -189,7 +210,10 @@ fn init_loot() -> () {
         "Suspenders",
         "Rope",
         "Jeweled Belt",
-    ].iter().map(|s| s.to_string()).collect();
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     loot.foot = vec![
         "Slippers",
@@ -226,7 +250,10 @@ fn init_loot() -> () {
         "Moccasins",
         "Espadrilles",
         "Loafers",
-    ].iter().map(|s| s.to_string()).collect();
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     loot.underwear = vec![
         "Thong",
@@ -244,7 +271,10 @@ fn init_loot() -> () {
         "Granny Panties",
         "Diaper",
         "Garter",
-    ].iter().map(|s| s.to_string()).collect();
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     loot.accessory = vec![
         "Necklace",
@@ -308,7 +338,10 @@ fn init_loot() -> () {
         "Scrunchie",
         "Bracelet",
         "Kandi Bracelet",
-    ].iter().map(|s| s.to_string()).collect();
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     loot.pants = vec![
         "Shorts",
@@ -338,7 +371,10 @@ fn init_loot() -> () {
         "Hot Pants",
         "Swim Trunks",
         "Capri Pants",
-    ].iter().map(|s| s.to_string()).collect();
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     loot.prefixes = vec![
         "Second Hand",
@@ -363,7 +399,10 @@ fn init_loot() -> () {
         "Vintage",
         "Retro",
         "Victorian",
-    ].iter().map(|s| s.to_string()).collect();
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     loot.name_prefixes = vec![
         "Gold",
@@ -409,7 +448,10 @@ fn init_loot() -> () {
         "Boho",
         "Military",
         "Velour",
-    ].iter().map(|s| s.to_string()).collect();
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     loot.name_suffixes = vec![
         "Dirty",
@@ -446,8 +488,10 @@ fn init_loot() -> () {
         "Formal",
         "Monogramed",
         "Haute Couture",
-    ].iter().map(|s| s.to_string()).collect();
-
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
 
     let loot2 = storage::get_mut::<Loot2>();
     *loot2 = Loot2 {
@@ -482,12 +526,28 @@ fn remaining() -> u64 {
 
 #[query]
 fn owner_of(token_id: u64) -> Option<Principal> {
-   return storage::get::<AddressBook>().owner_of(&token_id);
+    return storage::get::<AddressBook>().owner_of(&token_id);
 }
 
 #[update]
 fn transfer_to(user: Principal, token_id: u64) -> bool {
     return storage::get_mut::<AddressBook>().transfer_to(user, token_id);
+}
+
+#[update]
+async fn transfer_with_notify(
+    user: Principal,
+    token_id: u64,
+    notification: TransferNotification,
+) -> bool {
+    let address_book = storage::get_mut::<AddressBook>();
+    if address_book.transfer_to(user, token_id) {
+        let _result: CallResult<()> =
+            ic_cdk::call(notification.to, "transfer_notification", (notification,)).await;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 #[update]
@@ -507,13 +567,13 @@ fn get_airdrops() -> Vec<(u64, bool)> {
             let mut results: Vec<(u64, bool)> = Vec::new();
             for token in tokens {
                 results.push((
-                    token.clone(), 
-                    address_book.is_owner_of(ic_cdk::caller(), token)
+                    token.clone(),
+                    address_book.is_owner_of(ic_cdk::caller(), token),
                 ));
             }
             return results;
-        },
-        None => Vec::new()
+        }
+        None => Vec::new(),
     }
 }
 
@@ -534,7 +594,7 @@ fn add_airdrops(users: Vec<Principal>) -> bool {
     for id in users {
         match address_book.claim(id) {
             Ok(token_id) => update_airdroppers(id, token_id),
-            Err(_) => return false
+            Err(_) => return false,
         }
     }
     return true;
@@ -592,10 +652,8 @@ struct HttpResponse {
     body: Vec<u8>,
 }
 
-
 #[query]
 async fn http_request(req: HttpRequest) -> HttpResponse {
-
     let parts: Vec<&str> = req.url.split('?').collect();
 
     let token_param: Vec<&str> = parts[1].split('=').collect();
@@ -603,12 +661,13 @@ async fn http_request(req: HttpRequest) -> HttpResponse {
 
     let address_book = storage::get_mut::<AddressBook>();
 
-    if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id) {
+    if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id)
+    {
         return HttpResponse {
             status_code: 404,
             headers: Vec::new(),
             body: Vec::new(),
-        }
+        };
     }
 
     let loot = storage::get_mut::<Loot>();
@@ -621,19 +680,22 @@ async fn http_request(req: HttpRequest) -> HttpResponse {
 
     let mut headers: Vec<HeaderField> = Vec::new();
     headers.push(("content-type".to_string(), "image/svg+xml".to_string()));
-    headers.push(("cache-control".to_string(), "public, max-age=604800, immutable".to_string()));
+    headers.push((
+        "cache-control".to_string(),
+        "public, max-age=604800, immutable".to_string(),
+    ));
     return HttpResponse {
         status_code: 200,
         headers,
         body: results.to_vec(),
-    }
+    };
 }
 
 #[query]
 fn data_of(token_id: u64) -> Vec<LootData> {
-
     let address_book = storage::get::<AddressBook>();
-    if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id) {
+    if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id)
+    {
         return Vec::new();
     }
     let seed = address_book.token_seeds.get(&token_id).unwrap();
@@ -644,7 +706,7 @@ fn data_of(token_id: u64) -> Vec<LootData> {
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub enum DataOfQuery {
     Range(u64, u64),
-    List(Vec<u64>)
+    List(Vec<u64>),
 }
 
 #[query]
@@ -653,7 +715,7 @@ fn data_of_many(query: DataOfQuery) -> BTreeMap<u64, Vec<LootData>> {
     match query {
         DataOfQuery::Range(from, to) => {
             let mut results = BTreeMap::new();
-            for i in from..to+1 {
+            for i in from..to + 1 {
                 if !address_book.is_claimed(&i) {
                     continue;
                 }
@@ -662,7 +724,7 @@ fn data_of_many(query: DataOfQuery) -> BTreeMap<u64, Vec<LootData>> {
                 results.insert(i, loot.get_properties(i + seed));
             }
             return results;
-        },
+        }
         DataOfQuery::List(items) => {
             let mut results = BTreeMap::new();
             for id in items {
@@ -674,15 +736,15 @@ fn data_of_many(query: DataOfQuery) -> BTreeMap<u64, Vec<LootData>> {
                 results.insert(id, loot.get_properties(id + seed));
             }
             return results;
-        },
+        }
     }
 }
 
 #[query]
 fn get_token_properties(token_id: u64) -> Vec<(String, String)> {
-
     let address_book = storage::get::<AddressBook>();
-    if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id) {
+    if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id)
+    {
         return Vec::new();
     }
     let seed = address_book.token_seeds.get(&token_id).unwrap();
@@ -691,12 +753,10 @@ fn get_token_properties(token_id: u64) -> Vec<(String, String)> {
 }
 
 #[query]
-fn get_token_properties_range(from: u64, to:u64) -> Vec<Vec<(String, String)>> {
-
+fn get_token_properties_range(from: u64, to: u64) -> Vec<Vec<(String, String)>> {
     let address_book = storage::get::<AddressBook>();
-    
     let mut results = Vec::new();
-    for i in from..to+1 {
+    for i in from..to + 1 {
         if !address_book.is_claimed(&i) {
             continue;
         }
@@ -706,7 +766,6 @@ fn get_token_properties_range(from: u64, to:u64) -> Vec<Vec<(String, String)>> {
     }
     return results;
 }
-
 
 //this is not working correctly.
 #[query(name = "__get_candid_interface_tmp_hack")]
@@ -754,6 +813,13 @@ type ClaimResult = variant {
     Err: text;
 };
 
+type TransferNotification = record {
+    to: principal;
+    from: principal;
+    amount: nat64;
+    memo: opt blob;
+};
+
 type LootData = record {
     slot: text;
     name: text;
@@ -788,6 +854,7 @@ service : {
     user_tokens: (principal) -> (vec nat64) query;
     owner_of: (nat64) -> (opt principal) query;
     transfer_to: (principal, nat64) -> (bool);
+    transfer_with_notify: (principal, nat64, TransferNotification) -> (bool);
     claim: () -> (ClaimResult);
     remaining: () -> (nat64);
 
@@ -796,19 +863,18 @@ service : {
     remove_controller: (principal) -> (bool);
     supply: () -> (nat64);
 }
-    "#.to_string();
+    "#
+    .to_string();
 }
 
 #[derive(CandidType, Deserialize)]
 struct StableStorage {
     address_book: AddressBook,
-    airdroppers: BTreeMap<Principal, Vec<u64>>
+    airdroppers: BTreeMap<Principal, Vec<u64>>,
 }
-
 
 #[pre_upgrade]
 fn pre_upgrade() {
-
     let stable = StableStorage {
         address_book: storage::get::<AddressBook>().clone(),
         airdroppers: storage::get::<BTreeMap<Principal, Vec<u64>>>().clone(),
@@ -829,10 +895,8 @@ fn pre_upgrade() {
 fn post_upgrade() {
     init();
     if let Ok((storage,)) = storage::stable_restore::<(StableStorage,)>() {
-
         let address_book = storage::get_mut::<AddressBook>();
         *address_book = storage.address_book;
-        
         let airdroppers = storage::get_mut::<BTreeMap<Principal, Vec<u64>>>();
         *airdroppers = storage.airdroppers;
     }
