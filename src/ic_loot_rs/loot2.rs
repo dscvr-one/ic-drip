@@ -1,8 +1,7 @@
-
-use ic_cdk::export::{candid::{CandidType, Deserialize}};
 use crate::rand::Rand;
+use ic_cdk::export::candid::{CandidType, Deserialize};
 
-//I created this because I did not want to 
+//I created this because I did not want to
 //mess with the generator which is being used.
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
@@ -15,7 +14,6 @@ pub struct Loot2 {
     pub underwear: Vec<String>,
     pub accessory: Vec<String>,
     pub pants: Vec<String>,
-    
     pub prefixes: Vec<String>,
     pub name_prefixes: Vec<String>,
     pub name_suffixes: Vec<String>,
@@ -25,16 +23,13 @@ pub struct Loot2 {
 pub struct LootData {
     pub slot: String,
     pub name: String,
-    
     pub prefix: String,
     pub name_prefix: String,
     pub name_suffix: String,
-    pub special: bool
+    pub special: bool,
 }
 
-
 impl Loot2 {
-
     pub fn get_weapon(&self, token_id: u64) -> LootData {
         self.compute(&self.weapons, 1, token_id, "weapon".to_string())
     }
@@ -79,7 +74,13 @@ impl Loot2 {
         return self.name_suffixes[rand as usize % &self.name_suffixes.len()].clone();
     }
 
-    pub fn compute(&self, items: &Vec<String>, offset: u64, token_id: u64, kind: String) -> LootData {
+    pub fn compute(
+        &self,
+        items: &Vec<String>,
+        offset: u64,
+        token_id: u64,
+        kind: String,
+    ) -> LootData {
         let rand = Rand::new(token_id + offset).rand();
         let item_index = rand as usize % items.len();
 
@@ -92,7 +93,7 @@ impl Loot2 {
 
         if greatness > 14 {
             data.prefix = self.get_prefix(rand);
-        } 
+        }
         if greatness > 19 {
             if greatness == 19 {
                 data.name_prefix = self.get_name_prefix(rand);
@@ -103,7 +104,7 @@ impl Loot2 {
                 data.name_prefix = self.get_name_prefix(rand);
                 data.name_suffix = self.get_name_suffix(rand);
             }
-        } 
+        }
         return data;
     }
 
@@ -117,6 +118,6 @@ impl Loot2 {
             self.get_underwear(token_id),
             self.get_accessory(token_id),
             self.get_foot(token_id),
-        ]
+        ];
     }
 }

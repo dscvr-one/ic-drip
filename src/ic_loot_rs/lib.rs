@@ -534,28 +534,29 @@ fn transfer_to(user: Principal, token_id: u64) -> bool {
 }
 
 #[update]
-async fn transfer_with_notify(
-    user_id: Principal, token_id: u64
-) -> bool {
+async fn transfer_with_notify(user_id: Principal, token_id: u64) -> bool {
     let address_book = storage::get_mut::<AddressBook>();
     if address_book.transfer_to(user_id, token_id) {
-        match
-            ic_cdk::call(user_id, "transfer_notification", ( 
-                TransferNotification{
-                    to: user_id,
-                    from: ic_cdk::caller(),
-                    token_id: token_id,
-                    amount: 1
-                },)
-            ).await as CallResult<()> {
-                Ok(_) => return true,
-                Err(_) => {
-                    //gets in rejected state and the next
-                    //line is not executed completely
-                    //address_book.undo_transfer(user_id, token_id);
-                    return false;
-                }
+        match ic_cdk::call(
+            user_id,
+            "transfer_notification",
+            (TransferNotification {
+                to: user_id,
+                from: ic_cdk::caller(),
+                token_id: token_id,
+                amount: 1,
+            },),
+        )
+        .await as CallResult<()>
+        {
+            Ok(_) => return true,
+            Err(_) => {
+                //gets in rejected state and the next
+                //line is not executed completely
+                //address_book.undo_transfer(user_id, token_id);
+                return false;
             }
+        }
     } else {
         return false;
     }

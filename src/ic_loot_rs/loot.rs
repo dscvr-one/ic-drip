@@ -1,7 +1,5 @@
-
-use ic_cdk::export::{candid::{CandidType, Deserialize}};
 use crate::rand::Rand;
-
+use ic_cdk::export::candid::{CandidType, Deserialize};
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct Loot {
@@ -13,7 +11,6 @@ pub struct Loot {
     pub underwear: Vec<String>,
     pub accessory: Vec<String>,
     pub pants: Vec<String>,
-    
     pub prefixes: Vec<String>,
     pub suffixes: Vec<String>,
     pub name_prefixes: Vec<String>,
@@ -21,7 +18,6 @@ pub struct Loot {
 }
 
 impl Loot {
-
     pub fn get_weapon(&self, token_id: u64) -> String {
         self.compute(&self.weapons, 1, token_id)
     }
@@ -75,15 +71,25 @@ impl Loot {
         let greatness = rand % 21;
 
         if greatness > 14 {
-            output = format!("{} {}",self.get_prefix(rand), output);
-        } 
+            output = format!("{} {}", self.get_prefix(rand), output);
+        }
         if greatness > 19 {
             if greatness == 19 {
-                output = format!("\"{}\" {} ({})", self.get_name_prefix(rand), self.get_name_suffix(rand), output);
+                output = format!(
+                    "\"{}\" {} ({})",
+                    self.get_name_prefix(rand),
+                    self.get_name_suffix(rand),
+                    output
+                );
             } else {
-                output = format!("\"{}\" {} ({}) 🔥", self.get_name_prefix(rand), output, self.get_name_suffix(rand));
+                output = format!(
+                    "\"{}\" {} ({}) 🔥",
+                    self.get_name_prefix(rand),
+                    output,
+                    self.get_name_suffix(rand)
+                );
             }
-        } 
+        }
         return output;
     }
 
@@ -97,11 +103,12 @@ impl Loot {
             ("pants".to_string(), self.get_pants(token_id)),
             ("underwear".to_string(), self.get_underwear(token_id)),
             ("accessory".to_string(), self.get_accessory(token_id)),
-        ]
+        ];
     }
 
     pub fn generate(&self, token_id: u64) -> String {
-        return format!(r#"
+        return format!(
+            r#"
                 <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 420 420">
                     <style>
                     .base {{ fill: white; font-family: HelveticaNeue-Bold, Helvetica Neue; font-size: 14px; }} 
@@ -132,11 +139,11 @@ impl Loot {
                     {}
                     </text>
                 </svg>
-            "#, 
-            self.get_weapon(token_id), 
-            self.get_chest(token_id), 
-            self.get_head(token_id), 
-            self.get_waist(token_id), 
+            "#,
+            self.get_weapon(token_id),
+            self.get_chest(token_id),
+            self.get_head(token_id),
+            self.get_waist(token_id),
             self.get_foot(token_id),
             self.get_underwear(token_id),
             self.get_accessory(token_id),
