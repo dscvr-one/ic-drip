@@ -784,6 +784,7 @@ fn export_candid() -> String {
     return r#"
 
 //    http://icdrip.io
+//    STAGING ENVIRONMENT
 
 //    ██▓ ▄████▄     ▓█████▄  ██▀███   ██▓ ██▓███  
 //    ▓██▒▒██▀ ▀█     ▒██▀ ██▌▓██ ▒ ██▒▓██▒▓██░  ██▒
