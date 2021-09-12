@@ -20,10 +20,9 @@ use crate::loot2::{Loot2, LootData};
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct TransferNotification {
     pub to: Principal,
-    pub token: u64,
+    pub token_id: u64,
     pub from: Principal,
     pub amount: u64,
-    pub memo: Option<Vec<u8>>,
 }
 
 #[init]
@@ -536,15 +535,27 @@ fn transfer_to(user: Principal, token_id: u64) -> bool {
 
 #[update]
 async fn transfer_with_notify(
-    user: Principal,
-    token_id: u64,
-    notification: TransferNotification,
+    user_id: Principal, token_id: u64
 ) -> bool {
     let address_book = storage::get_mut::<AddressBook>();
-    if address_book.transfer_to(user, token_id) {
-        let _result: CallResult<()> =
-            ic_cdk::call(notification.to, "transfer_notification", (notification,)).await;
-        return true;
+    if address_book.transfer_to(user_id, token_id) {
+        match
+            ic_cdk::call(user_id, "transfer_notification", ( 
+                TransferNotification{
+                    to: user_id,
+                    from: ic_cdk::caller(),
+                    token_id: token_id,
+                    amount: 1
+                },)
+            ).await as CallResult<()> {
+                Ok(_) => return true,
+                Err(_) => {
+                    //gets in rejected state and the next
+                    //line is not executed completely
+                    //address_book.undo_transfer(user_id, token_id);
+                    return false;
+                }
+            }
     } else {
         return false;
     }
@@ -816,9 +827,9 @@ type ClaimResult = variant {
 type TransferNotification = record {
     to: principal;
     from: principal;
+    token_id: nat64;
     amount: nat64;
-    memo: opt blob;
-};
+  };
 
 type LootData = record {
     slot: text;
@@ -854,7 +865,7 @@ service : {
     user_tokens: (principal) -> (vec nat64) query;
     owner_of: (nat64) -> (opt principal) query;
     transfer_to: (principal, nat64) -> (bool);
-    transfer_with_notify: (principal, nat64, TransferNotification) -> (bool);
+    transfer_with_notify: (principal, nat64) -> (bool);
     claim: () -> (ClaimResult);
     remaining: () -> (nat64);
 
