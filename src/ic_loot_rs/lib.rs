@@ -628,8 +628,8 @@ fn get_controllers() -> Vec<Principal> {
 }
 
 #[update]
-fn get_cycles() -> i64 {
-    return ic_cdk::api::call::msg_cycles_available();
+fn get_cycles() -> u64 {
+    return ic_cdk::api::canister_balance();
 }
 
 #[query]
@@ -787,17 +787,17 @@ fn export_candid() -> String {
 //    http://icdrip.io
 //    STAGING ENVIRONMENT
 
-//    ██▓ ▄████▄     ▓█████▄  ██▀███   ██▓ ██▓███  
+//    ██▓ ▄████▄     ▓█████▄  ██▀███   ██▓ ██▓███
 //    ▓██▒▒██▀ ▀█     ▒██▀ ██▌▓██ ▒ ██▒▓██▒▓██░  ██▒
 //    ▒██▒▒▓█    ▄    ░██   █▌▓██ ░▄█ ▒▒██▒▓██░ ██▓▒
 //    ░██░▒▓▓▄ ▄██▒   ░▓█▄   ▌▒██▀▀█▄  ░██░▒██▄█▓▒ ▒
 //    ░██░▒ ▓███▀ ░   ░▒████▓ ░██▓ ▒██▒░██░▒██▒ ░  ░
 //    ░▓  ░ ░▒ ▒  ░    ▒▒▓  ▒ ░ ▒▓ ░▒▓░░▓  ▒▓▒░ ░  ░
-//     ▒ ░  ░  ▒       ░ ▒  ▒   ░▒ ░ ▒░ ▒ ░░▒ ░     
-//     ▒ ░░            ░ ░  ░   ░░   ░  ▒ ░░░       
-//     ░  ░ ░            ░       ░      ░           
-//        ░            ░                            
- 
+//     ▒ ░  ░  ▒       ░ ▒  ▒   ░▒ ░ ▒░ ▒ ░░▒ ░
+//     ▒ ░░            ░ ░  ░   ░░   ░  ▒ ░░░
+//     ░  ░ ░            ░       ░      ░
+//        ░            ░
+
 type HeaderField = record { text; text; };
 
 type HttpRequest = record {
@@ -847,7 +847,7 @@ type DataOfQuery = variant {
     Range: record {nat64; nat64};
     List: vec nat64;
 };
-  
+
 service : {
     http_request: (request: HttpRequest) -> (HttpResponse) query;
 
@@ -859,7 +859,7 @@ service : {
     data_of: (nat64) -> (vec LootData) query;
     data_of_many: (DataOfQuery) -> (vec record {nat64; vec LootData;}) query;
 
-    get_cycles: () -> (int64);
+    get_cycles: () -> (nat64);
     get_airdrops: () -> (vec record { nat64; bool }) query;
     add_airdrops: (vec principal) -> (bool);
     name: () -> (text) query;
