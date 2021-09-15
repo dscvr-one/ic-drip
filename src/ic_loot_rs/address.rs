@@ -64,6 +64,16 @@ impl AddressBook {
         return false;
     }
 
+    pub fn undo_transfer(&mut self, user_id: Principal, token_id: u64) -> bool {
+        if let Some(token_owner) = self.tokens.get(&token_id) {
+            if &user_id == token_owner {
+                self.tokens.insert(token_id, ic_cdk::caller());
+                return true;
+            } 
+        }
+        return false;
+    }
+
     pub fn transfer_to(&mut self, user: Principal, token_id: u64) -> bool {
         if let Some(token_owner) = self.tokens.get(&token_id) {
             if token_owner == &ic_cdk::caller() {

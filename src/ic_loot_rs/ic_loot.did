@@ -1,3 +1,17 @@
+//    http://icdrip.io
+
+//    ██▓ ▄████▄     ▓█████▄  ██▀███   ██▓ ██▓███  
+//    ▓██▒▒██▀ ▀█     ▒██▀ ██▌▓██ ▒ ██▒▓██▒▓██░  ██▒
+//    ▒██▒▒▓█    ▄    ░██   █▌▓██ ░▄█ ▒▒██▒▓██░ ██▓▒
+//    ░██░▒▓▓▄ ▄██▒   ░▓█▄   ▌▒██▀▀█▄  ░██░▒██▄█▓▒ ▒
+//    ░██░▒ ▓███▀ ░   ░▒████▓ ░██▓ ▒██▒░██░▒██▒ ░  ░
+//    ░▓  ░ ░▒ ▒  ░    ▒▒▓  ▒ ░ ▒▓ ░▒▓░░▓  ▒▓▒░ ░  ░
+//     ▒ ░  ░  ▒       ░ ▒  ▒   ░▒ ░ ▒░ ▒ ░░▒ ░     
+//     ▒ ░░            ░ ░  ░   ░░   ░  ▒ ░░░       
+//     ░  ░ ░            ░       ░      ░           
+//        ░            ░                            
+ 
+
 type HeaderField = record { text; text; };
 
 type HttpRequest = record {
@@ -26,12 +40,39 @@ type ClaimResult = variant {
   Err: text;
 };
 
+type LootData = record {
+  slot: text;
+  name: text;
+
+  prefix: text;
+  name_prefix: text;
+  name_suffix: text;
+  special: bool;
+};
+
+type DataOfQuery = variant {
+  Range: record {nat64; nat64};
+  List: vec nat64;
+};
+
+type TransferNotification = record {
+  to: principal;
+  from: principal;
+  token_id: nat64;
+  amount: nat64;
+};
+
 service : {
     http_request: (request: HttpRequest) -> (HttpResponse) query;
 
     get_address_book: () -> (AddressBook) query;
     get_token_properties: (nat64) -> (vec record { text; text}) query;
+    get_token_properties_range: (nat64, nat64) -> (vec vec record { text; text}) query;
 
+    data_of: (nat64) -> (vec LootData) query;
+    data_of_many: (DataOfQuery) -> (vec record {nat64; vec LootData;}) query;
+
+    get_cycles: () -> (int64);
     get_airdrops: () -> (vec record { nat64; bool }) query;
     add_airdrops: (vec principal) -> (bool);
     name: () -> (text) query;
@@ -39,6 +80,7 @@ service : {
     user_tokens: (principal) -> (vec nat64) query;
     owner_of: (nat64) -> (opt principal) query;
     transfer_to: (principal, nat64) -> (bool);
+    transfer_with_notify: (principal, nat64) -> (bool);
     claim: () -> (ClaimResult);
     remaining: () -> (nat64);
     supply: () -> (nat64);
