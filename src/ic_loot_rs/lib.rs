@@ -798,8 +798,6 @@ fn export_candid() -> String {
 //     ░  ░ ░            ░       ░      ░
 //        ░            ░
 
-type HeaderField = record { text; text; };
-
 type HttpRequest = record {
     method: text;
     url: text;
