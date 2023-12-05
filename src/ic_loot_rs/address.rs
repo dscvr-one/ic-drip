@@ -1,6 +1,5 @@
 
-
-use ic_cdk::export::{candid::{CandidType, Deserialize}, Principal};
+use candid::{CandidType, Principal, Deserialize};
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]

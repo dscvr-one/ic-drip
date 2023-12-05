@@ -20,7 +20,7 @@
       "type": "assets"
     }
   },
-  "dfx": "0.8.1",
+  "dfx": "0.15.1",
   "defaults": {
     "build": {
       "output": "canisters/"

@@ -1,11 +1,9 @@
 use ic_cdk::api::call::CallResult;
-use ic_cdk::export::{
-    candid::{CandidType, Deserialize},
-    Principal,
-};
+use candid::{CandidType, Principal, Deserialize};
 use ic_cdk::storage;
 use ic_cdk_macros::*;
 use serde_bytes::ByteBuf;
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 mod address;
@@ -25,196 +23,207 @@ pub struct TransferNotification {
     pub amount: u64,
 }
 
+thread_local! {
+    static ADDRESS_BOOK: RefCell<AddressBook> = RefCell::default();
+    static LOOT: RefCell<Loot> = RefCell::default();
+    static LOOT2: RefCell<Loot2> = RefCell::default();
+    static AIR_DROPPERS: RefCell<BTreeMap<Principal, Vec<u64>>> = RefCell::default();
+}
+
 #[init]
 fn init() {
     ic_cdk::println!("Init {:?}", ic_cdk::api::time());
 
-    let address_book = storage::get_mut::<AddressBook>();
-    address_book.total_supply = 8000;
+    ADDRESS_BOOK.with(|address_book| address_book.borrow_mut().total_supply = 8000 );
 
     //needs to be a way to pass this into init
     let owner_id =
         Principal::from_text("2c22g-lboam-nseoa-i5al6-o7k6f-o2fwz-huoua-be63r-oi3k2-wy7uq-zae")
             .unwrap();
-    address_book.add_controller(&owner_id);
+    ADDRESS_BOOK.with(|address_book| address_book.borrow_mut().add_controller(&owner_id));
 
     init_loot();
 }
 
 fn init_loot() -> () {
-    let loot = storage::get_mut::<Loot>();
+    LOOT.with(|loot| 
+        loot.borrow_mut().weapons = vec![
+            "Cellphone",
+            "Laptop",
+            "Purse",
+            "Cat",
+            "Golf Club",
+            "Spoon",
+            "Beggar Cup",
+            "Wine Glass",
+            "Fidget Spinner",
+            "Massager",
+            "Beer Mug",
+            "TV Controller",
+            "Pillow",
+            "Blanket",
+            "Wand",
+            "Waifu Pillow",
+            "Microphone",
+            "Guitar",
+            "Trumpet",
+            "Banjo",
+            "Cane",
+            "Yo-yo",
+            "Tennis Racket",
+            "Record Player",
+            "Video Game Console",
+            "Umbrella",
+            "Surf Board",
+            "Whip",
+            "Scissors",
+            "Key",
+            "Pen",
+            "Paintbrush",
+            "Megaphone",
+            "Dog Leash",
+            "Book",
+            "Pocket Watch",
+            "Wrench",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
+    );
 
-    loot.weapons = vec![
-        "Cellphone",
-        "Laptop",
-        "Purse",
-        "Cat",
-        "Golf Club",
-        "Spoon",
-        "Beggar Cup",
-        "Wine Glass",
-        "Fidget Spinner",
-        "Massager",
-        "Beer Mug",
-        "TV Controller",
-        "Pillow",
-        "Blanket",
-        "Wand",
-        "Waifu Pillow",
-        "Microphone",
-        "Guitar",
-        "Trumpet",
-        "Banjo",
-        "Cane",
-        "Yo-yo",
-        "Tennis Racket",
-        "Record Player",
-        "Video Game Console",
-        "Umbrella",
-        "Surf Board",
-        "Whip",
-        "Scissors",
-        "Key",
-        "Pen",
-        "Paintbrush",
-        "Megaphone",
-        "Dog Leash",
-        "Book",
-        "Pocket Watch",
-        "Wrench",
-    ]
-    .iter()
-    .map(|s| s.to_string())
-    .collect();
+    LOOT.with(|loot| 
+        loot.borrow_mut().chest = vec![
+            "Robe",
+            "Shirt",
+            "Hoodie",
+            "Fishnet Shirt",
+            "Plastic Shirt",
+            "Polyester Shirt",
+            "Hawaiian Shirt",
+            "Polo Shirt",
+            "Ring Mail",
+            "Blazer",
+            "Vest",
+            "Tank Top",
+            "Button Up",
+            "Bowling Shirt",
+            "Shawl",
+            "Cardigan",
+            "Wind Breaker",
+            "Rain Coat",
+            "Sports Bra",
+            "Graphic Tee",
+            "Body Paint",
+            "Tunic",
+            "Corset",
+            "Sweater",
+            "Crop Top",
+            "Cardigan",
+            "Safari Jacket",
+            "Bandeau Top",
+            "Bra",
+            "Bikini Top",
+            "Dress",
+            "Puffer Jacket",
+            "Dinner Jacket",
+            "Smoking Jacket",
+            "Waist Coat",
+            "Tailcoat",
+            "Tuxedo Jacket",
+            "Parka",
+            "Overcoat",
+            "Turtle Neck",
+            "Bomber Jacket",
+            "Trench Coat",
+            "Cape",
+            "Kimono",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
+    );
 
-    loot.chest = vec![
-        "Robe",
-        "Shirt",
-        "Hoodie",
-        "Fishnet Shirt",
-        "Plastic Shirt",
-        "Polyester Shirt",
-        "Hawaiian Shirt",
-        "Polo Shirt",
-        "Ring Mail",
-        "Blazer",
-        "Vest",
-        "Tank Top",
-        "Button Up",
-        "Bowling Shirt",
-        "Shawl",
-        "Cardigan",
-        "Wind Breaker",
-        "Rain Coat",
-        "Sports Bra",
-        "Graphic Tee",
-        "Body Paint",
-        "Tunic",
-        "Corset",
-        "Sweater",
-        "Crop Top",
-        "Cardigan",
-        "Safari Jacket",
-        "Bandeau Top",
-        "Bra",
-        "Bikini Top",
-        "Dress",
-        "Puffer Jacket",
-        "Dinner Jacket",
-        "Smoking Jacket",
-        "Waist Coat",
-        "Tailcoat",
-        "Tuxedo Jacket",
-        "Parka",
-        "Overcoat",
-        "Turtle Neck",
-        "Bomber Jacket",
-        "Trench Coat",
-        "Cape",
-        "Kimono",
-    ]
-    .iter()
-    .map(|s| s.to_string())
-    .collect();
+    LOOT.with(|loot| 
+        loot.borrow_mut().head = vec![
+            "Fedora",
+            "Sombrero",
+            "Sun Hat",
+            "Viking Helm",
+            "Silk Hood",
+            "Hood",
+            "Top Hat",
+            "Bucket Hat",
+            "Baseball Cap",
+            "Beret",
+            "Doo Rag",
+            "Cowboy",
+            "Flat Cap",
+            "Porkpie Hat",
+            "Panama Hat",
+            "Sailors Bonet",
+            "Beanie",
+            "Headband",
+            "Captain Hat",
+            "Equestrian Helm",
+            "Visor",
+            "Turban",
+            "Wedding Veil",
+            "Feather Hat",
+            "Propeller Hat",
+            "Cat Ears",
+            "Headphones",
+            "Helmet",
+            "Wizard Hat",
+            "Safari Hat",
+            "Pith Helmet",
+            "Tiara",
+            "Flower Crown",
+            "Crown",
+            "Bandana",
+            "Umbrella Hat",
+            "Motorcycle Helmet",
+            "Peaked Cap",
+            "Golf Visor",
+            "Bowler Hat",
+            "Bow Hat",
+            "Dunce Cap",
+            "Towel",
+            "Jewelry Headpiece",
+            "Cheese Head",
+            "Yarmulke",
+            "Bald Cap",
+            "Coonskin Cap",
+            "Balaclava",
+            "Bonnet",
+            "Fez",
+            "Space Helmet",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
+    );
 
-    loot.head = vec![
-        "Fedora",
-        "Sombrero",
-        "Sun Hat",
-        "Viking Helm",
-        "Silk Hood",
-        "Hood",
-        "Top Hat",
-        "Bucket Hat",
-        "Baseball Cap",
-        "Beret",
-        "Doo Rag",
-        "Cowboy",
-        "Flat Cap",
-        "Porkpie Hat",
-        "Panama Hat",
-        "Sailors Bonet",
-        "Beanie",
-        "Headband",
-        "Captain Hat",
-        "Equestrian Helm",
-        "Visor",
-        "Turban",
-        "Wedding Veil",
-        "Feather Hat",
-        "Propeller Hat",
-        "Cat Ears",
-        "Headphones",
-        "Helmet",
-        "Wizard Hat",
-        "Safari Hat",
-        "Pith Helmet",
-        "Tiara",
-        "Flower Crown",
-        "Crown",
-        "Bandana",
-        "Umbrella Hat",
-        "Motorcycle Helmet",
-        "Peaked Cap",
-        "Golf Visor",
-        "Bowler Hat",
-        "Bow Hat",
-        "Dunce Cap",
-        "Towel",
-        "Jewelry Headpiece",
-        "Cheese Head",
-        "Yarmulke",
-        "Bald Cap",
-        "Coonskin Cap",
-        "Balaclava",
-        "Bonnet",
-        "Fez",
-        "Space Helmet",
-    ]
-    .iter()
-    .map(|s| s.to_string())
-    .collect();
-
-    loot.waist = vec![
-        "Fanny Pack",
-        "Fish Belt",
-        "Studded Belt",
-        "Belt",
-        "Leather Belt",
-        "Chrome Belt",
-        "Platinum Belt",
-        "Belt",
-        "Bat Belt",
-        "Shoelace Belt",
-        "Suspenders",
-        "Rope",
-        "Jeweled Belt",
-    ]
-    .iter()
-    .map(|s| s.to_string())
-    .collect();
-
-    loot.foot = vec![
+    LOOT.with(|loot| 
+        loot.borrow_mut().waist = vec![
+            "Fanny Pack",
+            "Fish Belt",
+            "Studded Belt",
+            "Belt",
+            "Leather Belt",
+            "Chrome Belt",
+            "Platinum Belt",
+            "Belt",
+            "Bat Belt",
+            "Shoelace Belt",
+            "Suspenders",
+            "Rope",
+            "Jeweled Belt",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect());
+    
+    LOOT.with(|loot| loot.borrow_mut().foot = vec![
         "Slippers",
         "Hightops",
         "Boat shoes",
@@ -252,9 +261,9 @@ fn init_loot() -> () {
     ]
     .iter()
     .map(|s| s.to_string())
-    .collect();
+    .collect());
 
-    loot.underwear = vec![
+    LOOT.with(|loot| loot.borrow_mut().underwear = vec![
         "Thong",
         "Boxers",
         "Boxer Briefs",
@@ -273,9 +282,9 @@ fn init_loot() -> () {
     ]
     .iter()
     .map(|s| s.to_string())
-    .collect();
+    .collect());
 
-    loot.accessory = vec![
+    LOOT.with(|loot| loot.borrow_mut().accessory = vec![
         "Necklace",
         "Amulet",
         "Pendant",
@@ -340,9 +349,9 @@ fn init_loot() -> () {
     ]
     .iter()
     .map(|s| s.to_string())
-    .collect();
+    .collect());
 
-    loot.pants = vec![
+    LOOT.with(|loot| loot.borrow_mut().pants = vec![
         "Shorts",
         "Skirt",
         "Jeans",
@@ -373,9 +382,9 @@ fn init_loot() -> () {
     ]
     .iter()
     .map(|s| s.to_string())
-    .collect();
+    .collect()); 
 
-    loot.prefixes = vec![
+    LOOT.with(|loot| loot.borrow_mut().prefixes = vec![
         "Second Hand",
         "Aged",
         "Worn Out",
@@ -401,9 +410,9 @@ fn init_loot() -> () {
     ]
     .iter()
     .map(|s| s.to_string())
-    .collect();
+    .collect());
 
-    loot.name_prefixes = vec![
+    LOOT.with(|loot| loot.borrow_mut().name_prefixes = vec![
         "Gold",
         "Shiny",
         "Psychedelic",
@@ -450,9 +459,9 @@ fn init_loot() -> () {
     ]
     .iter()
     .map(|s| s.to_string())
-    .collect();
+    .collect());
 
-    loot.name_suffixes = vec![
+    LOOT.with(|loot| loot.borrow_mut().name_suffixes = vec![
         "Dirty",
         "Clean",
         "Designer",
@@ -490,53 +499,58 @@ fn init_loot() -> () {
     ]
     .iter()
     .map(|s| s.to_string())
-    .collect();
+    .collect());
 
-    let loot2 = storage::get_mut::<Loot2>();
-    *loot2 = Loot2 {
-        weapons: loot.weapons.clone(),
-        waist: loot.waist.clone(),
-        chest: loot.chest.clone(),
-        head: loot.head.clone(),
-        foot: loot.foot.clone(),
-        underwear: loot.underwear.clone(),
-        accessory: loot.accessory.clone(),
-        pants: loot.pants.clone(),
-        prefixes: loot.prefixes.clone(),
-        name_prefixes: loot.name_prefixes.clone(),
-        name_suffixes: loot.name_suffixes.clone(),
-    }
+    LOOT.with(|_loot| {
+        let loot = _loot.borrow();
+        LOOT2.with(|loot2| {
+            let mut _loot2 = loot2.borrow_mut();
+            _loot2.weapons = loot.weapons.clone();
+            _loot2.waist = loot.waist.clone();
+            _loot2.chest = loot.chest.clone();
+            _loot2.head = loot.head.clone();
+            _loot2.foot = loot.foot.clone();
+            _loot2.underwear = loot.underwear.clone();
+            _loot2.accessory = loot.accessory.clone();
+            _loot2.pants = loot.pants.clone();
+            _loot2.prefixes = loot.prefixes.clone();
+            _loot2.name_prefixes = loot.name_prefixes.clone();
+            _loot2.name_suffixes = loot.name_suffixes.clone();
+        })
+    });
 }
 
 #[query]
 fn user_tokens(user: Principal) -> Vec<u64> {
-    return storage::get::<AddressBook>().user_tokens(&user);
+    ADDRESS_BOOK.with(|address_book| address_book.borrow().user_tokens(&user))
 }
 
 #[query]
 fn supply() -> u64 {
-    return storage::get::<AddressBook>().total_supply;
+    ADDRESS_BOOK.with(|address_book| address_book.borrow().total_supply)
 }
 
 #[query]
 fn remaining() -> u64 {
-    return storage::get::<AddressBook>().remaining();
+    ADDRESS_BOOK.with(|address_book| address_book.borrow().remaining())
 }
 
 #[query]
 fn owner_of(token_id: u64) -> Option<Principal> {
-    return storage::get::<AddressBook>().owner_of(&token_id);
+    ADDRESS_BOOK.with(|address_book| address_book.borrow().owner_of(&token_id))
 }
 
 #[update]
 fn transfer_to(user: Principal, token_id: u64) -> bool {
-    return storage::get_mut::<AddressBook>().transfer_to(user, token_id);
+    ADDRESS_BOOK.with(|address_book| address_book.borrow_mut().transfer_to(user, token_id))
 }
 
 #[update]
 async fn transfer_with_notify(user_id: Principal, token_id: u64) -> bool {
-    let address_book = storage::get_mut::<AddressBook>();
-    if address_book.transfer_to(user_id, token_id) {
+    let result = ADDRESS_BOOK.with(|address_book| 
+        address_book.borrow_mut().transfer_to(user_id, token_id)
+    );
+    if result {
         match ic_cdk::call(
             user_id,
             "transfer_notification",
@@ -559,72 +573,79 @@ async fn transfer_with_notify(user_id: Principal, token_id: u64) -> bool {
         }
     } else {
         return false;
-    }
+    } 
+
 }
 
 #[update]
 fn claim() -> Result<u64, String> {
     //return Err("No claims for this NFT type (IC DRIP)".to_string());
-    return storage::get_mut::<AddressBook>().claim(ic_cdk::caller());
+    ADDRESS_BOOK.with(|address_book| address_book.borrow_mut().claim(ic_cdk::caller()))
 }
 
 //Allow the original airdrop to always exists for future references
 //where sites can use this to know if the person transferred their NFT or not.
 #[query]
 fn get_airdrops() -> Vec<(u64, bool)> {
-    let airdroppers = storage::get_mut::<BTreeMap<Principal, Vec<u64>>>();
-    let address_book = storage::get_mut::<AddressBook>();
-    match airdroppers.get(&ic_cdk::caller()) {
-        Some(tokens) => {
-            let mut results: Vec<(u64, bool)> = Vec::new();
-            for token in tokens {
-                results.push((
-                    token.clone(),
-                    address_book.is_owner_of(ic_cdk::caller(), token),
-                ));
+    AIR_DROPPERS.with(|airdroppers| {
+        match airdroppers.borrow_mut().get(&ic_cdk::caller()) {
+            Some(tokens) => {
+                ADDRESS_BOOK.with(|address_book| {
+                    let mut results: Vec<(u64, bool)> = Vec::new();
+                    for token in tokens {
+                        results.push((
+                            token.clone(),
+                            address_book.borrow_mut().is_owner_of(ic_cdk::caller(), token),
+                        ));
+                    }
+                    return results;
+                })
             }
-            return results;
+            None => Vec::new(),
         }
-        None => Vec::new(),
-    }
+    })
+
 }
 
 //Save list of airdrops for other platforms to use.
 fn update_airdroppers(user: Principal, token_id: u64) -> () {
-    let airdroppers = storage::get_mut::<BTreeMap<Principal, Vec<u64>>>();
-    match airdroppers.get_mut(&user) {
-        Some(tokens) => tokens.push(token_id),
-        None => {
-            airdroppers.insert(user, vec![token_id]);
+    AIR_DROPPERS.with(|airdroppers| {
+        match airdroppers.borrow_mut().get_mut(&user) {
+            Some(tokens) => tokens.push(token_id),
+            None => {
+                airdroppers.borrow_mut().insert(user, vec![token_id]);
+            }
         }
-    }
+    })
+
 }
 
 #[update(guard = "is_controller")]
 fn add_airdrops(users: Vec<Principal>) -> bool {
-    let address_book = storage::get_mut::<AddressBook>();
-    for id in users {
-        match address_book.claim(id) {
-            Ok(token_id) => update_airdroppers(id, token_id),
-            Err(_) => return false,
+    ADDRESS_BOOK.with(|address_book| {
+        for id in users {
+            match address_book.borrow_mut().claim(id) {
+                Ok(token_id) => update_airdroppers(id, token_id),
+                Err(_) => return false,
+            }
         }
-    }
-    return true;
+        return true;
+    })
 }
 
 #[update(guard = "is_controller")]
 fn add_controller(user: Principal) -> bool {
-    return storage::get_mut::<AddressBook>().add_controller(&user);
+    ADDRESS_BOOK.with(|address_book| address_book.borrow_mut().add_controller(&user))
 }
 
 #[update(guard = "is_controller")]
 fn remove_controller(user: Principal) -> bool {
-    return storage::get_mut::<AddressBook>().remove_controller(&user);
+    ADDRESS_BOOK.with(|address_book| address_book.borrow_mut().remove_controller(&user))
 }
 
 #[update(guard = "is_controller")]
 fn get_controllers() -> Vec<Principal> {
-    return storage::get::<AddressBook>().controllers.clone();
+    ADDRESS_BOOK.with(|address_book| address_book.borrow().controllers.clone())
 }
 
 #[update]
@@ -644,7 +665,7 @@ fn symbol() -> String {
 
 #[query]
 fn get_address_book() -> AddressBook {
-    return storage::get::<AddressBook>().clone();
+    ADDRESS_BOOK.with(|address_book| address_book.borrow().clone())
 }
 
 type HeaderField = (String, String);
@@ -671,9 +692,15 @@ async fn http_request(req: HttpRequest) -> HttpResponse {
     let token_param: Vec<&str> = parts[1].split('=').collect();
     let token_id = token_param[1].parse::<u64>().unwrap();
 
-    let address_book = storage::get_mut::<AddressBook>();
+    let address_book_result = ADDRESS_BOOK.with(|address_book| {
+        let address_book = address_book.borrow();
+        if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id) {
+            return true;
+        }
+        false
+    });
 
-    if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id)
+    if address_book_result
     {
         return HttpResponse {
             status_code: 404,
@@ -682,11 +709,9 @@ async fn http_request(req: HttpRequest) -> HttpResponse {
         };
     }
 
-    let loot = storage::get_mut::<Loot>();
+    let seed = ADDRESS_BOOK.with(|address_book| address_book.borrow().token_seeds.get(&token_id).unwrap().clone());
 
-    let seed = address_book.token_seeds.get(&token_id).unwrap();
-
-    let data = loot.generate(token_id.clone() + seed.clone());
+    let data = LOOT.with(|loot| loot.borrow().generate(token_id.clone() + seed.clone()));
 
     let results = data.as_bytes();
 
@@ -705,14 +730,20 @@ async fn http_request(req: HttpRequest) -> HttpResponse {
 
 #[query]
 fn data_of(token_id: u64) -> Vec<LootData> {
-    let address_book = storage::get::<AddressBook>();
-    if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id)
+    let address_book_result = ADDRESS_BOOK.with(|address_book| {
+        let address_book = address_book.borrow();
+        if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id) {
+            return true;
+        }
+        false
+    });
+    if address_book_result
     {
         return Vec::new();
     }
-    let seed = address_book.token_seeds.get(&token_id).unwrap();
-    let loot = storage::get::<Loot2>();
-    return loot.get_properties(token_id + seed);
+    let seed = 
+        ADDRESS_BOOK.with(|address_book| address_book.borrow().token_seeds.get(&token_id).unwrap().clone());
+    return LOOT2.with(|loot| loot.borrow().get_properties(token_id + seed));
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
@@ -723,60 +754,74 @@ pub enum DataOfQuery {
 
 #[query]
 fn data_of_many(query: DataOfQuery) -> BTreeMap<u64, Vec<LootData>> {
-    let address_book = storage::get::<AddressBook>();
-    match query {
-        DataOfQuery::Range(from, to) => {
-            let mut results = BTreeMap::new();
-            for i in from..to + 1 {
-                if !address_book.is_claimed(&i) {
-                    continue;
+    ADDRESS_BOOK.with(|value| {
+        let address_book = value.borrow();
+        match query {
+            DataOfQuery::Range(from, to) => {
+                let mut results = BTreeMap::new();
+                for i in from..to + 1 {
+                    if !address_book.is_claimed(&i) {
+                        continue;
+                    }
+                    let seed = address_book.token_seeds.get(&i).unwrap();
+                    results.insert(
+                        i,
+                        LOOT2.with(|loot2| loot2.borrow().get_properties(i + seed))
+                    );
                 }
-                let seed = address_book.token_seeds.get(&i).unwrap();
-                let loot = storage::get::<Loot2>();
-                results.insert(i, loot.get_properties(i + seed));
+                return results;
             }
-            return results;
-        }
-        DataOfQuery::List(items) => {
-            let mut results = BTreeMap::new();
-            for id in items {
-                if !address_book.is_claimed(&id) {
-                    continue;
+            DataOfQuery::List(items) => {
+                let mut results = BTreeMap::new();
+                for id in items {
+                    if !address_book.is_claimed(&id) {
+                        continue;
+                    }
+                    let seed = address_book.token_seeds.get(&id).unwrap();
+                    results.insert(
+                        id,
+                        LOOT2.with(|loot2| loot2.borrow().get_properties(id + seed))
+                    );
                 }
-                let seed = address_book.token_seeds.get(&id).unwrap();
-                let loot = storage::get::<Loot2>();
-                results.insert(id, loot.get_properties(id + seed));
+                return results;
             }
-            return results;
         }
-    }
+    })
 }
 
 #[query]
 fn get_token_properties(token_id: u64) -> Vec<(String, String)> {
-    let address_book = storage::get::<AddressBook>();
-    if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id)
+    let address_book_result = ADDRESS_BOOK.with(|value| {
+        let address_book = value.borrow();
+        if token_id <= 0 || token_id > address_book.total_supply || !address_book.is_claimed(&token_id)
+        {
+            return true;
+        }
+        false
+    });
+    if address_book_result
     {
         return Vec::new();
     }
-    let seed = address_book.token_seeds.get(&token_id).unwrap();
-    let loot = storage::get::<Loot>();
-    return loot.get_properties(token_id + seed);
+    let seed =
+        ADDRESS_BOOK.with(|address_book| address_book.borrow().token_seeds.get(&token_id).unwrap().clone());
+    return LOOT.with(|loot| loot.borrow().get_properties(token_id + seed));
 }
 
 #[query]
 fn get_token_properties_range(from: u64, to: u64) -> Vec<Vec<(String, String)>> {
-    let address_book = storage::get::<AddressBook>();
-    let mut results = Vec::new();
-    for i in from..to + 1 {
-        if !address_book.is_claimed(&i) {
-            continue;
+    ADDRESS_BOOK.with(|value| {
+        let address_book = value.borrow();
+        let mut results = Vec::new();
+        for i in from..to + 1 {
+            if !address_book.is_claimed(&i) {
+                continue;
+            }
+            let seed = address_book.token_seeds.get(&i).unwrap();
+            results.push(LOOT.with(|loot| loot.borrow().get_properties(i + seed)));
         }
-        let seed = address_book.token_seeds.get(&i).unwrap();
-        let loot = storage::get::<Loot>();
-        results.push(loot.get_properties(i + seed))
-    }
-    return results;
+        return results;
+    })
 }
 
 //this is not working correctly.
@@ -889,8 +934,8 @@ struct StableStorage {
 #[pre_upgrade]
 fn pre_upgrade() {
     let stable = StableStorage {
-        address_book: storage::get::<AddressBook>().clone(),
-        airdroppers: storage::get::<BTreeMap<Principal, Vec<u64>>>().clone(),
+        address_book: ADDRESS_BOOK.with(|address_book| address_book.borrow().clone()),
+        airdroppers: AIR_DROPPERS.with(|value| value.borrow().clone())
     };
 
     match storage::stable_save((stable,)) {
@@ -908,15 +953,20 @@ fn pre_upgrade() {
 fn post_upgrade() {
     init();
     if let Ok((storage,)) = storage::stable_restore::<(StableStorage,)>() {
-        let address_book = storage::get_mut::<AddressBook>();
-        *address_book = storage.address_book;
-        let airdroppers = storage::get_mut::<BTreeMap<Principal, Vec<u64>>>();
-        *airdroppers = storage.airdroppers;
+        ADDRESS_BOOK.with(|value| {
+            let mut address_book = value.borrow_mut();
+            *address_book = storage.address_book.clone();
+        });
+
+        AIR_DROPPERS.with(|value| {
+            let mut airdroppers = value.borrow_mut();
+            *airdroppers = storage.airdroppers;
+        });
     }
 }
 
 fn is_controller() -> Result<(), String> {
-    if storage::get::<AddressBook>().is_controller(&ic_cdk::caller()) {
+    if ADDRESS_BOOK.with(|address_book| address_book.borrow().is_controller(&ic_cdk::caller())) {
         Ok(())
     } else {
         Err("Only the controller can call this method.".to_string())
