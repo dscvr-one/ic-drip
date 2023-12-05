@@ -1,5 +1,5 @@
 use crate::rand::Rand;
-use ic_cdk::export::candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize};
 
 //I created this because I did not want to
 //mess with the generator which is being used.
